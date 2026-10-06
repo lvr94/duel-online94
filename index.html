@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Duel Online</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    background: #0b1020;
+
+    color: white;
+
+    font-family: Arial, sans-serif;
+
+    overflow: hidden;
+}
+
+/* =========================
+   MENU ONLINE
+========================= */
+
+#onlineMenu {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle,
+            #182449,
+            #070b16
+        );
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    z-index: 100;
+}
+
+#onlineMenu h1 {
+
+    font-size: 64px;
+
+    margin: 0 0 10px;
+
+    text-shadow:
+        0 0 25px #4d7cff;
+}
+
+#onlineMenu p {
+
+    color: #b9c3e6;
+
+    font-size: 18px;
+}
+
+.onlineButton {
+
+    margin-top: 20px;
+
+    padding: 16px 35px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4d7cff,
+            #8b5cf6
+        );
+
+    color: white;
+
+    font-size: 20px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.onlineButton:hover {
+
+    transform: scale(1.05);
+}
+
+#roomCodeInput {
+
+    margin-top: 25px;
+
+    padding: 15px;
+
+    width: 180px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    font-size: 22px;
+
+    text-align: center;
+
+    text-transform: uppercase;
+}
+
+#status {
+
+    margin-top: 20px;
+
+    color: #38bdf8;
+
+    font-weight: bold;
+
+}
+
+/* =========================
+   GAME
+========================= */
+
+#game {
+
+    display: none;
+
+    width: 100vw;
+
+    height: 100vh;
+
+    position: relative;
+}
+
+canvas {
+
+    display: block;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #172342,
+            #080c18
+        );
+}
+
+#ui {
+
+    position: absolute;
+
+    top: 15px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 90%;
+
+    max-width: 1100px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    pointer-events: none;
+}
+
+.score {
+
+    padding: 12px 25px;
+
+    border-radius: 12px;
+
+    font-size: 25px;
+
+    font-weight: bold;
+
+    background: #11182d;
+
+    border: 2px solid;
+}
+
+#score1 {
+
+    color: #38bdf8;
+
+    border-color: #38bdf8;
+}
+
+#score2 {
+
+    color: #fb4168;
+
+    border-color: #fb4168;
+}
+
+#timer {
+
+    font-size: 28px;
+
+    font-weight: bold;
+}
+
+#instructions {
+
+    position: absolute;
+
+    bottom: 15px;
+
+    width: 100%;
+
+    text-align: center;
+
+    color: #8e9bc2;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+/* =========================
+   WINNER
+========================= */
+
+#winner {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: #050814dd;
+
+    z-index: 200;
+
+    justify-content: center;
+
+    align-items: center;
+
+    flex-direction: column;
+}
+
+#winner h2 {
+
+    font-size: 65px;
+
+    margin: 0;
+}
+
+#winner p {
+
+    font-size: 22px;
+
+    color: #cbd5e1;
+}
+
+#winner button {
+
+    padding: 15px 35px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #4d7cff;
+
+    color: white;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!-- =========================
+     MENU ONLINE
+========================= -->
+
+<div id="onlineMenu">
+
+    <h1>⚔️ DUEL ONLINE</h1>
+
+    <p>
+        Le premier joueur à 5 points gagne.
+    </p>
+
+    <p>
+        🎮 ZQSD = déplacement<br>
+        🔥 Entrée = tirer
+    </p>
+
+    <button
+        class="onlineButton"
+        onclick="createRoom()"
+    >
+        CRÉER UNE PARTIE
+    </button>
+
+    <input
+        id="roomCodeInput"
+        maxlength="6"
+        placeholder="CODE"
+    >
+
+    <button
+        class="onlineButton"
+        onclick="joinRoom()"
+    >
+        REJOINDRE UNE PARTIE
+    </button>
+
+    <div id="status">
+        Connexion au serveur...
+    </div>
+
+</div>
+
+
+<!-- =========================
+     GAME
+========================= -->
+
+<div id="game">
+
+    <canvas id="canvas"></canvas>
+
+    <div id="ui">
+
+        <div
+            class="score"
+            id="score1"
+        >
+            🔵 0
+        </div>
+
+        <div id="timer">
+            DUEL
+        </div>
+
+        <div
+            class="score"
+            id="score2"
+        >
+            🔴 0
+        </div>
+
+    </div>
+
+    <div id="instructions">
+
+        🔵 ZQSD = déplacement • Entrée = tirer
+
+        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+
+        🔴 ZQSD = déplacement • Entrée = tirer
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     WINNER
+========================= -->
+
+<div id="winner">
+
+    <h2 id="winnerText">
+        VICTOIRE
+    </h2>
+
+    <p id="winnerScore"></p>
+
+    <button onclick="location.reload()">
+        REJOUER
+    </button>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONNEXION AU SERVEUR
+===================================================== */
+
+const socket = new WebSocket(
+
+    location.protocol === "https:"
+        ? `wss://${location.host}`
+        : `ws://${location.host}`
+
+);
+
+
+/* =====================================================
+   VARIABLES MULTIJOUEUR
+===================================================== */
+
+let myPlayerId = null;
+
+let roomCode = null;
+
+let opponentConnected = false;
+
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+let width;
+let height;
+
+
+function resize() {
+
+    width =
+        canvas.width =
+        window.innerWidth;
+
+    height =
+        canvas.height =
+        window.innerHeight;
+
+}
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+resize();
+
+
+/* =====================================================
+   CLAVIER
+===================================================== */
+
+const keys = {};
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        keys[e.key.toLowerCase()] = true;
+
+        if (
+            [
+                "arrowup",
+                "arrowdown",
+                "arrowleft",
+                "arrowright",
+                " "
+            ].includes(
+                e.key.toLowerCase()
+            )
+        ) {
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    e => {
+
+        keys[e.key.toLowerCase()] = false;
+
+    }
+);
+
+
+/* =====================================================
+   WEBSOCKET
+===================================================== */
+
+socket.addEventListener(
+    "open",
+    () => {
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Connecté au serveur.";
+
+    }
+);
+
+
+socket.addEventListener(
+    "message",
+    event => {
+
+        const data =
+            JSON.parse(event.data);
+
+
+        /* =========================
+           PARTIE CREEE
+        ========================= */
+
+        if (
+            data.type ===
+            "roomCreated"
+        ) {
+
+            myPlayerId =
+                data.playerId;
+
+            roomCode =
+                data.code;
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                `Code de partie : ${roomCode} — En attente du joueur 2...`;
+
+        }
+
+
+        /* =========================
+           PARTIE REJOINTE
+        ========================= */
+
+        if (
+            data.type ===
+            "joinedRoom"
+        ) {
+
+            myPlayerId =
+                data.playerId;
+
+            roomCode =
+                data.code;
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "Partie rejointe !";
+
+        }
+
+
+        /* =========================
+           DEBUT DU JEU
+        ========================= */
+
+        if (
+            data.type ===
+            "gameStart"
+        ) {
+
+            opponentConnected =
+                true;
+
+            document.getElementById(
+                "onlineMenu"
+            ).style.display =
+                "none";
+
+            startGame();
+
+        }
+
+
+        /* =========================
+           POSITION ADVERSAIRE
+        ========================= */
+
+        if (
+            data.type ===
+            "opponentState"
+        ) {
+
+            const player =
+                data.playerId === 1
+                    ? player1
+                    : player2;
+
+            player.x =
+                data.state.x;
+
+            player.y =
+                data.state.y;
+
+            player.angle =
+                data.state.angle;
+
+        }
+                /* =========================
+           BALLE ENVOYEE PAR L'ADVERSAIRE
+        ========================= */
+
+        if (data.type === "bulletCreated") {
+
+            const bullet = data.bullet;
+
+            // Ne pas ajouter deux fois
+            // notre propre balle
+            if (bullet.owner !== myPlayerId) {
+
+                bullets.push(bullet);
+
+            }
+
+        }
+/* =========================
+   SCORE SYNCHRONISÉ
+========================= */
+
+if (data.type === "scoreUpdate") {
+
+    score1 = data.score1;
+
+    score2 = data.score2;
+
+    updateScore();
+
+}
+
+
+/* =========================
+   FIN DE PARTIE
+========================= */
+
+if (data.type === "gameOver") {
+
+    score1 = data.score1;
+
+    score2 = data.score2;
+
+    updateScore();
+
+    endGame();
+
+}
+
+
+        /* =========================
+           ADVERSAIRE DECONNECTE
+        ========================= */
+
+        if (
+            data.type ===
+            "opponentDisconnected"
+        ) {
+
+            gameRunning = false;
+
+            alert(
+                "Ton adversaire a quitté la partie."
+            );
+
+            location.reload();
+
+        }
+
+
+        /* =========================
+           ERREUR
+        ========================= */
+
+        if (
+            data.type ===
+            "error"
+        ) {
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                data.message;
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   CREER UNE PARTIE
+===================================================== */
+
+function createRoom() {
+
+    if (
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Le serveur n'est pas connecté.";
+
+        return;
+
+    }
+
+
+    socket.send(
+        JSON.stringify({
+
+            type:
+                "createRoom"
+
+        })
+    );
+
+}
+
+
+/* =====================================================
+   REJOINDRE UNE PARTIE
+===================================================== */
+
+function joinRoom() {
+
+    const input =
+        document.getElementById(
+            "roomCodeInput"
+        );
+
+    const code =
+        input.value
+            .trim()
+            .toUpperCase();
+
+
+    if (code.length !== 6) {
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "Le code doit contenir 6 caractères.";
+
+        return;
+
+    }
+
+
+    if (
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        return;
+
+    }
+
+
+    socket.send(
+        JSON.stringify({
+
+            type:
+                "joinRoom",
+
+            code:
+                code
+
+        })
+    );
+
+}
+
+
+/* =====================================================
+   JEU
+===================================================== */
+
+let gameRunning = false;
+
+let bullets = [];
+
+let particles = [];
+
+let score1 = 0;
+
+let score2 = 0;
+
+
+/* =====================================================
+   JOUEURS
+===================================================== */
+
+const player1 = {
+
+    x: 150,
+
+    y: 300,
+
+    radius: 25,
+
+    speed: 5,
+
+    color: "#38bdf8",
+
+    angle: 0,
+
+    cooldown: 0
+
+};
+
+
+const player2 = {
+
+    x: 800,
+
+    y: 300,
+
+    radius: 25,
+
+    speed: 5,
+
+    color: "#fb4168",
+
+    angle: Math.PI,
+
+    cooldown: 0
+
+};
+
+
+/* =====================================================
+   DEMARRER
+===================================================== */
+
+function startGame() {
+
+    document.getElementById(
+        "game"
+    ).style.display =
+        "block";
+
+    document.getElementById(
+        "winner"
+    ).style.display =
+        "none";
+
+
+    score1 = 0;
+
+    score2 = 0;
+
+    resetPlayers();
+
+    bullets = [];
+
+    particles = [];
+
+    updateScore();
+
+    gameRunning = true;
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetPlayers() {
+
+    player1.x =
+        width * 0.2;
+
+    player1.y =
+        height / 2;
+
+
+    player2.x =
+        width * 0.8;
+
+    player2.y =
+        height / 2;
+
+
+    player1.angle =
+        0;
+
+    player2.angle =
+        Math.PI;
+
+
+    bullets = [];
+
+}
+
+
+/* =====================================================
+   SCORE
+===================================================== */
+
+function updateScore() {
+
+    document.getElementById(
+        "score1"
+    ).textContent =
+        "🔵 " + score1;
+
+    document.getElementById(
+        "score2"
+    ).textContent =
+        "🔴 " + score2;
+
+}
+
+
+/* =====================================================
+   TIR
+===================================================== */
+
+function shoot(player, owner) {
+
+    if (player.cooldown > 0) {
+        return;
+    }
+
+    player.cooldown = 25;
+
+    const bullet = {
+
+        x:
+            player.x +
+            Math.cos(player.angle) * 32,
+
+        y:
+            player.y +
+            Math.sin(player.angle) * 32,
+
+        vx:
+            Math.cos(player.angle) * 10,
+
+        vy:
+            Math.sin(player.angle) * 10,
+
+        owner: owner,
+
+        radius: 6,
+
+        color: player.color
+
+    };
+
+    // La balle est immédiatement visible
+    // chez le joueur qui tire
+    bullets.push(bullet);
+
+    // On prévient le serveur
+    if (
+        socket.readyState === WebSocket.OPEN &&
+        opponentConnected
+    ) {
+
+        socket.send(
+            JSON.stringify({
+
+                type: "shoot",
+
+                bullet: bullet
+
+            })
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   MON JOUEUR
+===================================================== */
+
+function updateMyPlayer() {
+
+    const player =
+        myPlayerId === 1
+            ? player1
+            : player2;
+
+
+    if (keys["z"])
+        player.y -= player.speed;
+
+    if (keys["s"])
+        player.y += player.speed;
+
+    if (keys["q"])
+        player.x -= player.speed;
+
+    if (keys["d"])
+        player.x += player.speed;
+
+
+    if (keys["enter"])
+        shoot(
+            player,
+            myPlayerId
+        );
+
+
+    if (
+        keys["z"] ||
+        keys["s"] ||
+        keys["q"] ||
+        keys["d"]
+    ) {
+
+        player.angle =
+            Math.atan2(
+
+                (keys["s"] ? 1 : 0) -
+                (keys["z"] ? 1 : 0),
+
+                (keys["d"] ? 1 : 0) -
+                (keys["q"] ? 1 : 0)
+
+            );
+
+    }
+
+
+    player.x =
+        Math.max(
+            30,
+            Math.min(
+                width - 30,
+                player.x
+            )
+        );
+
+
+    player.y =
+        Math.max(
+            80,
+            Math.min(
+                height - 50,
+                player.y
+            )
+        );
+
+
+    if (
+        player.cooldown > 0
+    ) {
+
+        player.cooldown--;
+
+    }
+
+}
+
+
+/* =====================================================
+   ENVOYER MA POSITION
+===================================================== */
+
+function sendPlayerState() {
+
+    if (
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !opponentConnected
+    ) {
+
+        return;
+
+    }
+
+
+    const player =
+        myPlayerId === 1
+            ? player1
+            : player2;
+
+
+    socket.send(
+        JSON.stringify({
+
+            type:
+                "playerState",
+
+            state: {
+
+                x:
+                    player.x,
+
+                y:
+                    player.y,
+
+                angle:
+                    player.angle
+
+            }
+
+        })
+    );
+
+}
+
+
+/* =====================================================
+   BALLES
+===================================================== */
+
+function updateBullets() {
+
+    for (
+        let i = bullets.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const b =
+            bullets[i];
+
+
+        b.x += b.vx;
+
+        b.y += b.vy;
+
+
+        if (
+            b.x < 0 ||
+            b.x > width ||
+            b.y < 0 ||
+            b.y > height
+        ) {
+
+            bullets.splice(
+                i,
+                1
+            );
+
+            continue;
+
+        }
+
+
+        const target =
+            b.owner === 1
+                ? player2
+                : player1;
+
+
+        const distance =
+            Math.hypot(
+
+                b.x - target.x,
+
+                b.y - target.y
+
+            );
+
+
+        if (
+            distance <
+            target.radius +
+            b.radius
+        ) {
+
+            createExplosion(
+
+                target.x,
+
+                target.y,
+
+                target.color
+
+            );
+
+
+            bullets.splice(
+                i,
+                1
+            );
+
+
+            if (b.owner === myPlayerId) {
+
+    socket.send(
+        JSON.stringify({
+            type: "hit"
+        })
+    );
+
+}
+
+
+
+            resetPlayers();
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   PARTICULES
+===================================================== */
+
+function createExplosion(
+    x,
+    y,
+    color
+) {
+
+    for (
+        let i = 0;
+        i < 25;
+        i++
+    ) {
+
+        const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+        const speed =
+            Math.random() *
+            6 +
+            2;
+
+
+        particles.push({
+
+            x:
+                x,
+
+            y:
+                y,
+
+            vx:
+                Math.cos(angle) *
+                speed,
+
+            vy:
+                Math.sin(angle) *
+                speed,
+
+            life:
+                40,
+
+            color:
+                color,
+
+            size:
+                Math.random() *
+                5 +
+                2
+
+        });
+
+    }
+
+}
+
+
+function updateParticles() {
+
+    for (
+        let i = particles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const p =
+            particles[i];
+
+
+        p.x += p.vx;
+
+        p.y += p.vy;
+
+
+        p.vx *= 0.96;
+
+        p.vy *= 0.96;
+
+
+        p.life--;
+
+
+        if (
+            p.life <= 0
+        ) {
+
+            particles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   DESSIN
+===================================================== */
+
+function drawGrid() {
+
+    ctx.strokeStyle =
+        "#ffffff08";
+
+    ctx.lineWidth = 1;
+
+
+    const size = 50;
+
+
+    for (
+        let x = 0;
+        x < width;
+        x += size
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            0
+        );
+
+        ctx.lineTo(
+            x,
+            height
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for (
+        let y = 0;
+        y < height;
+        y += size
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            y
+        );
+
+        ctx.lineTo(
+            width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+function drawPlayer(
+    player
+) {
+
+    ctx.save();
+
+
+    ctx.shadowBlur =
+        25;
+
+    ctx.shadowColor =
+        player.color;
+
+
+    ctx.fillStyle =
+        player.color;
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+
+        player.x,
+
+        player.y,
+
+        player.radius,
+
+        0,
+
+        Math.PI * 2
+
+    );
+
+
+    ctx.fill();
+
+
+    ctx.shadowBlur = 0;
+
+
+    ctx.strokeStyle =
+        "white";
+
+    ctx.lineWidth = 5;
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+
+        player.x,
+
+        player.y
+
+    );
+
+
+    ctx.lineTo(
+
+        player.x +
+        Math.cos(
+            player.angle
+        ) * 40,
+
+        player.y +
+        Math.sin(
+            player.angle
+        ) * 40
+
+    );
+
+
+    ctx.stroke();
+
+
+    ctx.restore();
+
+}
+
+
+function drawBullets() {
+
+    bullets.forEach(
+        b => {
+
+            ctx.save();
+
+
+            ctx.fillStyle =
+                b.color;
+
+
+            ctx.shadowBlur =
+                15;
+
+
+            ctx.shadowColor =
+                b.color;
+
+
+            ctx.beginPath();
+
+
+            ctx.arc(
+
+                b.x,
+
+                b.y,
+
+                b.radius,
+
+                0,
+
+                Math.PI * 2
+
+            );
+
+
+            ctx.fill();
+
+
+            ctx.restore();
+
+        }
+    );
+
+}
+
+
+function drawParticles() {
+
+    particles.forEach(
+        p => {
+
+            ctx.globalAlpha =
+                p.life / 40;
+
+
+            ctx.fillStyle =
+                p.color;
+
+
+            ctx.beginPath();
+
+
+            ctx.arc(
+
+                p.x,
+
+                p.y,
+
+                p.size,
+
+                0,
+
+                Math.PI * 2
+
+            );
+
+
+            ctx.fill();
+
+        }
+    );
+
+
+    ctx.globalAlpha = 1;
+
+}
+
+
+function draw() {
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    drawGrid();
+
+
+    drawPlayer(player1);
+
+    drawPlayer(player2);
+
+
+    drawBullets();
+
+    drawParticles();
+
+
+    ctx.strokeStyle =
+        "#ffffff12";
+
+    ctx.setLineDash(
+        [10, 15]
+    );
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        width / 2,
+        80
+    );
+
+
+    ctx.lineTo(
+        width / 2,
+        height - 30
+    );
+
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
+
+}
+
+
+/* =====================================================
+   FIN DU JEU
+===================================================== */
+
+function endGame() {
+
+    gameRunning = false;
+
+
+    const winner =
+        score1 >= 5
+            ? "JOUEUR 1 GAGNE !"
+            : "JOUEUR 2 GAGNE !";
+
+
+    const color =
+        score1 >= 5
+            ? "#38bdf8"
+            : "#fb4168";
+
+
+    document.getElementById(
+        "winnerText"
+    ).textContent =
+        winner;
+
+
+    document.getElementById(
+        "winnerText"
+    ).style.color =
+        color;
+
+
+    document.getElementById(
+        "winnerScore"
+    ).textContent =
+        `${score1} - ${score2}`;
+
+
+    document.getElementById(
+        "winner"
+    ).style.display =
+        "flex";
+
+}
+
+
+/* =====================================================
+   BOUCLE DU JEU
+===================================================== */
+
+function gameLoop() {
+
+    if (!gameRunning) {
+
+        return;
+
+    }
+
+
+    updateMyPlayer();
+
+
+    sendPlayerState();
+
+
+    updateBullets();
+
+
+    updateParticles();
+
+
+    draw();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+</script>
+
+</body>
+
+</html>
